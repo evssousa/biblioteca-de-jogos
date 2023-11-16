@@ -1,35 +1,88 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState} from 'react'
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+
+  const [games, setGames] = useState(() => {
+    const storedGames = localStorage.getItem('obc-game-lib')
+    if (!storedGames) return []
+    return JSON.parse(storedGames)
+  })
+  const [titulo, setTitulo] = useState('')
+  const [capa, setCapa] = useState('')
+  
+  // Gera um id para cada jogo então 1 e 1 milhão
+  const addGame = ({ titulo, capa }) => {
+    const id = Math.floor(Math.random() * 1000000)
+    const game = { id, titulo, capa }
+
+    // Salva no localstorage quando a página é atualizada
+    setGames(state => {
+      const novoState = [...state, game]
+      localStorage.setItem('obc-game-lib', JSON.stringify(novoState))
+      return novoState
+    })
+  }
+
+  // Remove o jogo da lista
+  const removerGame = (id) => {
+    setGames(state => {
+      const novoState = state.filter(game => game.id !== id)
+      localStorage.setItem('obc-game-lib', JSON.stringify(novoState))
+      return novoState
+    })
+  }
+
+  // Evita da página atualizar quando for
+  // clicado no botão 'Adicionar à biblioteca'
+  const attSubmit = (ev) => {
+    ev.preventDefault()
+    addGame({ titulo, capa })
+    setTitulo('')
+    setCapa('')
+  }
+
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="app">
+      <h1>Biblioteca de Jogos</h1>
+
+      <form onSubmit={attSubmit}>
+        <div>
+          <label htmlFor="titulo">Título do Jogo:</label>
+          <input 
+            type="text"
+            name="titulo"
+            id="titulo"
+            value={titulo}
+            onChange={(e) => setTitulo(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="capa">Link da Capa:</label>
+          <input 
+            type="text"
+            name="capa"
+            id="capa"
+            value={capa}
+            onChange={(e) => setCapa(e.target.value)}
+          />
+        </div>
+
+        <button type="submit">Adicionar à biblioteca</button>
+      </form>
+
+      <div className='games'>
+        {games.map((game) => (
+          <div key={game.id}>
+            <img src={game.capa} alt="" />
+            <div>
+              <h2>{game.titulo}</h2>
+              <button onClick={() => removerGame(game.id)}>Remover</button>
+            </div>
+          </div>
+        ))}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </div>
   )
 }
-
-export default App
